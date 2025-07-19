@@ -1,0 +1,29 @@
+# RewriteEngine On
+
+# # If the requested file or directory exists, do nothing
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+
+# # Rewrite clean URLs (without .php extension)
+# RewriteRule ^([a-zA-Z0-9_-]+)$ $1.php [L]
+
+# # Optional: Redirect .php URLs to clean URLs (like /dashboard instead of /dashboard.php)
+# RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.php\sHTTP
+# RewriteRule ^ %1 [R=301,L]
+
+# # ============================
+# # Only remove .php if it's in the **root directory**
+# # ============================
+# RewriteCond %{REQUEST_URI} ^/([a-zA-Z0-9_-]+)\.php$
+# RewriteRule ^([a-zA-Z0-9_-]+)\.php$ /$1 [L,R=301]
+
+# # ============================
+# # Allow clean URLs for root folder PHP files only
+# # ============================
+# RewriteCond %{REQUEST_URI} ^/([a-zA-Z0-9_-]+)$
+# RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+# RewriteRule ^([a-zA-Z0-9_-]+)$ $1.php [L]
+
+# Optional: Force HTTPS (only needed if using SSL)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

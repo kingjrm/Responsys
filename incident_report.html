@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+    <!-- Leaflet CSS (Use only one: CDN or local) -->
+    <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /> -->
+    <!-- OR: Use local if you prefer -->
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/tailwind/style.css">
+    <link rel="stylesheet" href="css/tailwind/output.css">
+
+    <!-- Other Required CSS -->
+    <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <link rel="stylesheet" href="css/leaflet-search.css">
+    <!-- <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css"> -->
+    <link rel="stylesheet" href="css/leaflet-measure.css">
+    
+    <!-- Leaflet JS (Use only one: CDN or local) -->
+    <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> -->
+    <!-- OR: Use local if you prefer -->
+    <script src="js/leaflet.js"></script>
+    
+    <title>Report an Incident</title>
+</head>
+<body>
+    <div id="loader_container">
+        <img id="loading_gif" src="images/loading.gif" alt="Loading..." class="loader_gif">                            
+        <!-- <div class="loader-text">Loading map...</div> -->
+    </div>
+
+    <!-- Submit Report Form -->
+    <div id="form-container" class="hidden fixed top-4 right-4 bg-white p-2 rounded-lg shadow-lg w-[280px]">
+        <form id="locationForm" class="space-y-2">
+            <!-- Location -->
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Location:</label>
+                <input type="text" id="location" name="location" readonly required 
+                    class="block w-full rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-900 ring-1 ring-inset ring-gray-300">
+            </div>
+    
+            <!-- Barangay -->
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Barangay:</label>
+                <input type="text" id="barangay" name="barangay" readonly required 
+                    class="block w-full rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-900 ring-1 ring-inset ring-gray-300">
+            </div>
+    
+            <!-- Replace the photo section in the form with this updated version -->
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Photo:</label>
+                <div class="space-y-2">
+                    <button type="button" id="openCamera" 
+                        class="w-full rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-500">
+                        Take Photo
+                    </button>
+                    <img id="capturedPhoto" class="hidden w-full h-[120px] object-fill rounded-md" alt="Captured photo">
+                    <input type="hidden" id="photoData" name="photoData">
+                </div>
+            </div>
+    
+            <!-- Description -->
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Description:</label>
+                <textarea id="description" name="description" required rows="2"
+                    class="block w-full rounded-md bg-white px-2 py-1 text-xs text-gray-900 ring-1 ring-inset ring-gray-300"></textarea>
+            </div>
+    
+            <!-- Submit Button -->
+            <button type="submit" 
+                class="w-full rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-500">
+                Submit Report
+            </button>
+        </form>
+    </div>
+
+    <div id="legend">
+        <h4>Legend</h4>
+        <ul id="legend-list">
+            <li><span style="background: rgba(190,178,151,1.0); width: 10px; height: 10px; display: inline-block;"></span> Buildings</li>
+        </ul>
+    </div>
+    
+    <div id="resident-map">
+    </div>
+
+    <!-- Move the camera overlay outside the form and to the end of the body -->
+    <!-- Replace the camera overlay div -->
+    <div id="camera-overlay" class="hidden fixed inset-0 flex items-center justify-center bg-black/50 z-[9999]">
+        <div class="relative">
+            <video id="camera" 
+                class="w-[370px] h-[550px] object-cover rounded-lg" 
+                autoplay playsinline>
+            </video>
+    
+            <button id="closeCamera" 
+                class="absolute -top-2 -right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center z-10 shadow-lg">
+                ✕
+            </button>
+    
+            <button id="capturePhoto" 
+                class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 px-4 py-2 
+                text-gray-600 rounded-full text-sm font-medium shadow-lg hover:bg-gray-50">
+                Capture Photo
+            </button>
+        </div>
+    </div>
+                
+
+    <!-- Scripts -->
+    <script src="js/qgis2web_expressions.js"></script>
+    <!-- <script src="js/leaflet.js"></script> -->
+    <!-- <script src="js/L.Control.Layers.Tree.min.js"></script> -->
+    <script src="js/L.Control.Locate.min.js"></script>
+    <script src="js/leaflet.rotatedMarker.js"></script>
+    <script src="js/leaflet.pattern.js"></script>
+    <script src="js/leaflet-hash.js"></script>
+    <script src="js/Autolinker.min.js"></script>
+    <script src="js/rbush.min.js"></script>
+    <script src="js/labelgun.min.js"></script>
+    <script src="js/labels.js"></script>
+    <script src="js/leaflet-measure.js"></script>
+    <script src="js/leaflet-search.js"></script>
+
+    <!-- GeoJSON Data -->
+    <script src="data/PG_Brgy_Boundary_Cadastral_edited_1.js"></script>
+    <script src="data/Buildings_2.js"></script>
+
+    <!-- Initialize Map (Make sure it's the last script to load) -->
+    <!-- <script src="js/map-init.js"></script> -->
+    <script src="js/incidents/report_incidents.js"></script>
+
+    <!-- Reset GIF Animation -->
+    <script>
+        // Function to reset GIF animation
+        function resetGif() {
+            const gif = document.getElementById('loading_gif');
+            const src = gif.src;
+            gif.src = '';
+            gif.src = src + '?t=' + new Date().getTime();
+        }
+    
+        // Reset GIF on page load
+        window.addEventListener('load', resetGif);
+    
+        // Reset GIF when showing loader
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.classList.contains('loader_hidden')) {
+                    // When loader becomes visible again
+                    resetGif();
+                }
+            });
+        });
+    
+        // Start observing the loader container for class changes
+        observer.observe(document.getElementById('loader_container'), {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    </script>
+</body>
+</html>
